@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ElectronCgi.DotNet;
 using Newtonsoft.Json.Linq;
+using Microsoft.Azure.Devices.Client;
 
 namespace ForzaCore
 {
@@ -22,6 +23,9 @@ namespace ForzaCore
         private const int FORZA_HOST_PORT = 5200;
         private static Connection connection = new ConnectionBuilder().WithLogging().Build();
         private static string currentFilename = "./data/" + DateTime.Now.ToFileTime() + ".csv";
+        // private static string connectionString = "";
+        // private static DeviceClient deviceClient;
+        // private static readonly TransportType transportType = TransportType.Mqtt;
 
         static void Main(string[] args)
         {
@@ -63,7 +67,7 @@ namespace ForzaCore
                 }
             });
             #endregion
-
+            // deviceClient = DeviceClient.CreateFromConnectionString(connectionString, transportType);
             #region messaging between dotnet and node
             connection.On<string, string>("message-from-node", msg =>
             {

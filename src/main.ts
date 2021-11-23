@@ -64,7 +64,7 @@ connection.on('new-data', (data: any) => {
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
     // log this event
-    console.log(`${dataObj.Steer}`)
+    console.log(`${data}`)
 })
 
 connection.on('switch-recording-mode', (data: any) => {

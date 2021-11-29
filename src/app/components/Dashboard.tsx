@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { ThemeProvider } from '@material-ui/core/styles'
 import { createTheme } from '@material-ui/core/styles'
 import { ipcRenderer } from 'electron'
+import { Client, Message } from 'azure-iot-device'
+import { Mqtt as Protocol } from 'azure-iot-device-mqtt'
 import CSS from 'csstype'
 import Button from 'react-bootstrap/Button'
 import {
@@ -10,6 +12,7 @@ import {
     MDBModalContent,
     MDBModalBody,
     MDBModalFooter,
+    MDBInput,
 } from 'mdb-react-ui-kit'
 
 import Accelerometer from './Accelerometer'
@@ -82,7 +85,6 @@ const dataKeyStyle = {
     color: 'grey',
     fontSize: '12px',
 }
-
 type Packet = {
     TimestampMS: number
 
@@ -213,7 +215,8 @@ export const Dashboard = () => {
     const [previousFuel, setPreviousFuel] = useState(1)
     const [fullscreenModal, setFullscreenModal] = useState(false)
     const [settingsModal, setSettingsModal] = useState(false)
-
+    const [connectionString, setConnectionString] = useState('')
+    const [raceCode, setRaceCode] = useState('')
     const toggleFullscreenModalShow = () => setFullscreenModal(!fullscreenModal)
     const toggleSettingsModalShow = () => setSettingsModal(!settingsModal)
     // const setPrevFuel = (fuel: number) => setPreviousFuel(fuel);
@@ -283,7 +286,6 @@ export const Dashboard = () => {
     // new lap
     if (data && data.Lap !== lapNumber) {
         setLapNumber(data.Lap)
-
         // prevLapCoords need to be updated, new lap just started
         const c = lapCoords
         setPrevLapCoords(c)
@@ -298,6 +300,26 @@ export const Dashboard = () => {
                 data.LastLapTime.toFixed(3),
                 (data.LastLapTime - data.BestLapTime).toFixed(3),
             ])
+        }
+
+        console.log(raceCode)
+
+        if (connectionString != '') {
+            const client: Client = Client.fromConnectionString(
+                connectionString,
+                Protocol
+            )
+            const messageData: string = JSON.stringify({
+                DeviceID: 'Trevor',
+                SensorReadings: {
+                    Lap: lapNumber + 1,
+                    LastLapTime: data.LastLapTime,
+                    BestLapTime: data.BestLapTime,
+                },
+            })
+            const message: Message = new Message(messageData)
+
+            client.sendEvent(message)
         }
 
         // update split times
@@ -450,9 +472,38 @@ export const Dashboard = () => {
                                             <MDBModalDialog>
                                                 <MDBModalContent>
                                                     <MDBModalBody>
-                                                        <Button variant="outline-danger">
-                                                            Light Mode
-                                                        </Button>
+                                                        <MDBInput
+                                                            label="Connection String"
+                                                            onChange={(
+                                                                event
+                                                            ) => {
+                                                                setConnectionString(
+                                                                    event.target
+                                                                        .value
+                                                                )
+                                                                ipcRenderer.send(
+                                                                    'connection-string-from-node',
+                                                                    event.target
+                                                                        .value
+                                                                )
+                                                            }}
+                                                        ></MDBInput>
+                                                        <MDBInput
+                                                            label="Race Code"
+                                                            onChange={(
+                                                                event
+                                                            ) => {
+                                                                setRaceCode(
+                                                                    event.target
+                                                                        .value
+                                                                )
+                                                                ipcRenderer.send(
+                                                                    'race-code-from-node',
+                                                                    event.target
+                                                                        .value
+                                                                )
+                                                            }}
+                                                        ></MDBInput>
                                                     </MDBModalBody>
 
                                                     <MDBModalFooter>

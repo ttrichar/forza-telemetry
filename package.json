@@ -57,6 +57,8 @@
     "dependencies": {
         "@material-ui/core": "^4.12.3",
         "@material-ui/data-grid": "^4.0.0-alpha.37",
+        "azure-iot-device": "^1.17.8",
+        "azure-iot-device-mqtt": "^1.15.8",
         "bootstrap": "^5.1.1",
         "custom-electron-titlebar": "^3.2.7",
         "d3": "^7.0.1",

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Azure.Devices.Client;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using ElectronCgi.DotNet;
-using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 
 namespace ForzaCore
 {
@@ -17,6 +18,11 @@ namespace ForzaCore
         private const int recordRateMS = 50;
         private static bool recordingData = false;
         private static bool isRaceOn = false;
+        private static DeviceClient s_deviceClient;
+        private static uint lastLapCheck = 0;
+        private static float lastLapTime = 0;
+        private static string connectionString = "";
+        private static string raceCode = "";
         private static DataPacket data = new DataPacket();
         private const int FORZA_DATA_OUT_PORT = 5300;
         private const int FORZA_HOST_PORT = 5200;
@@ -42,6 +48,32 @@ namespace ForzaCore
                             return;
                         }
                         isRaceOn = resultBuffer.IsRaceOn();
+                        
+                        //data = ParseData(resultBuffer);
+
+                        if(lastLapCheck > 0 && resultBuffer.Lap() == 0 && connectionString != ""){
+                            s_deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
+                            var messageData = new {
+                                DeviceID = "Trevor",
+                                SensorReadings = new{
+                                    Lap = lastLapCheck + 1,
+                                    LastLapTime = lastLapTime
+                                }
+                            };
+                            var messageDataString = JsonConvert.SerializeObject(messageData);
+
+                            using var message = new Message(Encoding.UTF8.GetBytes(messageDataString)){
+                                ContentEncoding = "uft-8",
+                                ContentType = "application/json"
+                            };
+
+                            s_deviceClient.SendEventAsync(message);
+                        }
+
+                        lastLapCheck = resultBuffer.Lap();
+
+                        lastLapTime = resultBuffer.CurrentLapTime();
+
                         // send data to node here
                         if (resultBuffer.IsRaceOn())
                         {
@@ -65,11 +97,18 @@ namespace ForzaCore
             #endregion
 
             #region messaging between dotnet and node
-            connection.On<string, string>("message-from-node", msg =>
+            connection.On<string, string>("connection-string-from-node", msg =>
             {
-                connection.Send("new-data", $"{msg}");
-                return $"{msg}";
+                connectionString = msg;
+                return "connection string set";
             });
+
+            connection.On<string, string>("race-code-from-node", msg =>
+            {
+                raceCode = msg;
+                return "race code set";
+            });
+
             connection.On<string, string>("switch-recording-mode", msg =>
             {
                 if (recordingData)
@@ -88,7 +127,7 @@ namespace ForzaCore
 
         static void SendData(DataPacket data)
         {
-            string dataString = JsonSerializer.Serialize(data);
+            string dataString = System.Text.Json.JsonSerializer.Serialize(data);
             connection.Send("new-data", dataString);
         }
 

@@ -64,8 +64,10 @@ connection.on('new-data', (data: any) => {
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
     // log this event
-    console.log(`${dataObj.Steer}`)
+    console.log(`${dataObj.Lap} + ${dataObj.LastLapTime} + ${dataObj.IsRaceOn}`)
 })
+
+connection.send()
 
 connection.on('switch-recording-mode', (data: any) => {
     // parse data into object
@@ -73,7 +75,7 @@ connection.on('switch-recording-mode', (data: any) => {
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
     // log this event
-    console.log(`${dataObj.Steer}`)
+    // console.log(`${dataObj.Steer}`)
 })
 
 // send

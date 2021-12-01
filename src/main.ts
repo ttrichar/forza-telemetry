@@ -64,7 +64,21 @@ connection.on('new-data', (data: any) => {
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
     // log this event
-    console.log(`${dataObj.Lap} + ${dataObj.LastLapTime} + ${dataObj.IsRaceOn}`)
+    // console.log(`FROM THE NORMAL CALL: ${JSON.stringify(dataObj)}`)
+    console.log(
+        `FROM THE NORMAL CALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
+    )
+})
+
+connection.on('last-lap-data', (data: any) => {
+    // parse data into object
+    const dataObj = JSON.parse(data)
+    // send the data from forza to the front-end
+    window.webContents.send('new-data-for-dashboard', dataObj)
+    // log this event
+    console.log(
+        `FROM THE LAST LAP CALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
+    )
 })
 
 connection.send()

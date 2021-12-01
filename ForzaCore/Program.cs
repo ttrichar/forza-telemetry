@@ -15,11 +15,13 @@ namespace ForzaCore
 {
     class Program
     {
+        private static float bestLapTime = 0;
         private const int recordRateMS = 50;
         private static bool recordingData = false;
         private static bool isRaceOn = false;
         // private static DeviceClient s_deviceClient;
         private static uint lastLapCheck = 0;
+        private static float timeOffset = 0;
         private static float lastLapTime = 0;
         private static string connectionString = "";
         private static string raceCode = "";
@@ -52,23 +54,35 @@ namespace ForzaCore
                         
                         //data = ParseData(resultBuffer);
 
-                        if(lastLapCheck > 0 && resultBuffer.Lap() == 0 && connectionString != ""){
-                            // var messageData = new {
+                        if(lastLapCheck > 0 && resultBuffer.Lap().CompareTo(0) == 0){
+                            //  var messageData = new {
                             //     DeviceID = "Trevor",
                             //     SensorReadings = new{
                             //         Lap = lastLapCheck + 1,
                             //         LastLapTime = lastLapTime
                             //         }
                             //     };      
-                            //     var messageDataString = JsonConvert.SerializeObject(messageData);
+                            //     var messageDataString = JsonConvert.SerializeObject(messageData);                               
+                                data = ParseData(resultBuffer, lastLapTime + timeOffset, bestLapTime);
+                                SendData(data, true);
+                                lastLapCheck = 0;
 
-                            //     connection.Send("last-lap-data", messageDataString);    
+                                lastLapTime = 0;
+
+                                bestLapTime = 0;
+
+                                timeOffset = 0;
                             };
 
-                            
-                        lastLapCheck = resultBuffer.Lap();
+                            timeOffset = resultBuffer.CurrentLapTime() - lastLapTime;
 
-                        lastLapTime = resultBuffer.CurrentLapTime();
+                            lastLapCheck = resultBuffer.Lap();
+
+                            lastLapTime = resultBuffer.CurrentLapTime();
+
+                            bestLapTime = resultBuffer.BestLapTime();
+                            
+                        
 
                         // send data to node here
                         if (resultBuffer.IsRaceOn())
@@ -121,10 +135,15 @@ namespace ForzaCore
             #endregion
         }
 
-        static void SendData(DataPacket data)
+        static void SendData(DataPacket data, bool isLastLap = false)
         {
             string dataString = System.Text.Json.JsonSerializer.Serialize(data);
-            connection.Send("new-data", dataString);
+            if(!isLastLap){
+                connection.Send("new-data", dataString);
+            }
+            else{
+                connection.Send("last-lap-data", dataString);
+            }
         }
 
         static void RecordData(DataPacket data)
@@ -136,7 +155,7 @@ namespace ForzaCore
             sw.Close();
         }
 
-        static DataPacket ParseData(byte[] packet)
+        static DataPacket ParseData(byte[] packet, float lastLapTime = 0, float bestLapTime = 0)
         {
             DataPacket data = new DataPacket();
 
@@ -213,10 +232,21 @@ namespace ForzaCore
             data.TireTempRr = packet.TireTempRr();
             data.Boost = packet.Boost();
             data.Fuel = packet.Fuel();
-            data.Distance = packet.Distance();
-            data.BestLapTime = packet.BestLapTime();
-            data.LastLapTime = packet.LastLapTime();
-            data.CurrentLapTime = packet.CurrentLapTime();
+            data.Distance = packet.Distance();                       
+            if( lastLapTime != 0 && bestLapTime != 0){
+                data.LastLapTime = lastLapTime;
+                if(lastLapTime < bestLapTime){
+                    data.BestLapTime = lastLapTime;
+                }
+                else{
+                    data.BestLapTime = bestLapTime;
+                }
+            }
+            else{
+                data.LastLapTime = packet.LastLapTime();
+                data.BestLapTime = packet.BestLapTime();
+            }
+            data.CurrentLapTime = packet.CurrentLapTime();        
             data.CurrentRaceTime = packet.CurrentRaceTime();
             data.Lap = packet.Lap();
             data.RacePosition = packet.RacePosition();

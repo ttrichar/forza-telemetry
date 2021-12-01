@@ -310,7 +310,7 @@ export const Dashboard = () => {
                 Protocol
             )
             const messageData: string = JSON.stringify({
-                DeviceID: 'Trevor',
+                DeviceID: 'Racer',
                 SensorReadings: {
                     Lap: lapNumber + 1,
                     LastLapTime: data.LastLapTime,

@@ -42,6 +42,7 @@ namespace ForzaCore
                     await client.ReceiveAsync().ContinueWith(receive =>
                     {
                         var resultBuffer = receive.Result.Buffer;
+
                         if (!AdjustToBufferType(resultBuffer.Length))
                         {
                             connection.Send("new-data", $"buffer not the correct length. length is {resultBuffer.Length}");
@@ -52,24 +53,19 @@ namespace ForzaCore
                         //data = ParseData(resultBuffer);
 
                         if(lastLapCheck > 0 && resultBuffer.Lap() == 0 && connectionString != ""){
-                            s_deviceClient = DeviceClient.CreateFromConnectionString(connectionString);
                             var messageData = new {
                                 DeviceID = "Trevor",
                                 SensorReadings = new{
                                     Lap = lastLapCheck + 1,
                                     LastLapTime = lastLapTime
-                                }
-                            };
-                            var messageDataString = JsonConvert.SerializeObject(messageData);
+                                    }
+                                };      
+                                var messageDataString = JsonConvert.SerializeObject(messageData);
 
-                            using var message = new Message(Encoding.UTF8.GetBytes(messageDataString)){
-                                ContentEncoding = "uft-8",
-                                ContentType = "application/json"
+                                connection.Send("last-lap-data", messageDataString);    
                             };
 
-                            s_deviceClient.SendEventAsync(message);
-                        }
-
+                            
                         lastLapCheck = resultBuffer.Lap();
 
                         lastLapTime = resultBuffer.CurrentLapTime();

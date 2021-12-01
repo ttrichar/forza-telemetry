@@ -18,7 +18,7 @@ namespace ForzaCore
         private const int recordRateMS = 50;
         private static bool recordingData = false;
         private static bool isRaceOn = false;
-        private static DeviceClient s_deviceClient;
+        // private static DeviceClient s_deviceClient;
         private static uint lastLapCheck = 0;
         private static float lastLapTime = 0;
         private static string connectionString = "";
@@ -53,16 +53,16 @@ namespace ForzaCore
                         //data = ParseData(resultBuffer);
 
                         if(lastLapCheck > 0 && resultBuffer.Lap() == 0 && connectionString != ""){
-                            var messageData = new {
-                                DeviceID = "Trevor",
-                                SensorReadings = new{
-                                    Lap = lastLapCheck + 1,
-                                    LastLapTime = lastLapTime
-                                    }
-                                };      
-                                var messageDataString = JsonConvert.SerializeObject(messageData);
+                            // var messageData = new {
+                            //     DeviceID = "Trevor",
+                            //     SensorReadings = new{
+                            //         Lap = lastLapCheck + 1,
+                            //         LastLapTime = lastLapTime
+                            //         }
+                            //     };      
+                            //     var messageDataString = JsonConvert.SerializeObject(messageData);
 
-                                connection.Send("last-lap-data", messageDataString);    
+                            //     connection.Send("last-lap-data", messageDataString);    
                             };
 
                             

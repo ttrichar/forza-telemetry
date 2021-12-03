@@ -315,6 +315,7 @@ export const Dashboard = () => {
                     Lap: lapNumber + 1,
                     LastLapTime: data.LastLapTime,
                     BestLapTime: data.BestLapTime,
+                    RaceCode: raceCode ? raceCode : '',
                 },
             })
             const message: Message = new Message(messageData)

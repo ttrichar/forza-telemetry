@@ -202,6 +202,16 @@ function secondsToTimeString(seconds: number) {
     return strFormat
 }
 
+function sendToLapper(connectionString: string, messageData: string){
+    const client: Client = Client.fromConnectionString(
+        connectionString,
+        Protocol
+    )
+
+    const message: Message = new Message(messageData)
+
+    client.sendEvent(message)
+}
 export const Dashboard = () => {
     const [data, setData] = useState<Packet>()
     const [recordingState, setRecordingState] = useState('Record')
@@ -274,6 +284,60 @@ export const Dashboard = () => {
 
                 setMpg((distance / fuelUsed).toFixed(0))
             }
+            // new lap
+            if (data && data.Lap !== lapNumber) {
+                setLapNumber(data.Lap)
+                // prevLapCoords need to be updated, new lap just started
+                const c = lapCoords
+                setPrevLapCoords(c)
+
+                // delete current lapCoords
+                lapCoords.length = 0
+
+                // log previous lap data
+                if (lapNumber != NaN && lapNumber != -1) {
+                    lapData.unshift([
+                        lapNumber,
+                        data.LastLapTime.toFixed(3),
+                        (data.LastLapTime - data.BestLapTime).toFixed(3),
+                    ])
+                }
+
+                console.log(raceCode)
+
+                if (connectionString != '') {
+                    const messageData: string = JSON.stringify({
+                        DeviceID: 'Racer',
+                        SensorReadings: {
+                            Lap: lapNumber + 1,
+                            LastLapTime: data.LastLapTime,
+                            BestLapTime: data.BestLapTime,
+                            RaceCode: raceCode ? raceCode : '',
+                        },
+                    })
+                    sendToLapper(connectionString, messageData)
+                }
+
+                // update split times
+                for (let i = 0; i < lapData.length; i++) {
+                    if (Number(lapData[i][1]) == data.BestLapTime) {
+                        // this is the best time, so show no split time
+                        lapData[i][2] = ''
+                    } else if (
+                        Math.abs(Number(lapData[i][1]) - data.BestLapTime).toFixed(3) ==
+                        '0.000'
+                    ) {
+                        lapData[i][2] = ''
+                    } else {
+                        lapData[i][2] = (
+                            Number(lapData[i][1]) - data.BestLapTime
+                        ).toFixed(3)
+                    }
+                }
+
+                // update fuel numbers
+                setFuelPerLap((100 * ((1 - data.Fuel) / lapNumber)).toFixed(2) + '%')
+            }            
         })
     }, [])
 
@@ -283,66 +347,35 @@ export const Dashboard = () => {
         }
     }, [mpg])
 
-    // new lap
-    if (data && data.Lap !== lapNumber) {
-        setLapNumber(data.Lap)
-        // prevLapCoords need to be updated, new lap just started
-        const c = lapCoords
-        setPrevLapCoords(c)
+    React.useEffect(() => {
+        ipcRenderer.on('finish-race', (event: any, message: any) => {
+            setData(message)
 
-        // delete current lapCoords
-        lapCoords.length = 0
+            if (connectionString != '') {
+                // const messageData: string = JSON.stringify({
+                //     DeviceID: 'Racer',
+                //     SensorReadings: {
+                //         Lap: lapNumber + 1,
+                //         LastLapTime: data.LastLapTime,
+                //         BestLapTime: data.BestLapTime,
+                //         RaceCode: raceCode ? raceCode : '',
+                //     }
+                // })
 
-        // log previous lap data
-        if (lapNumber != NaN && lapNumber != -1) {
-            lapData.unshift([
-                lapNumber,
-                data.LastLapTime.toFixed(3),
-                (data.LastLapTime - data.BestLapTime).toFixed(3),
-            ])
-        }
-
-        console.log(raceCode)
-
-        if (connectionString != '') {
-            const client: Client = Client.fromConnectionString(
-                connectionString,
-                Protocol
-            )
-            const messageData: string = JSON.stringify({
-                DeviceID: 'Racer',
-                SensorReadings: {
-                    Lap: lapNumber + 1,
-                    LastLapTime: data.LastLapTime,
-                    BestLapTime: data.BestLapTime,
-                    RaceCode: raceCode ? raceCode : '',
-                },
-            })
-            const message: Message = new Message(messageData)
-
-            client.sendEvent(message)
-        }
-
-        // update split times
-        for (let i = 0; i < lapData.length; i++) {
-            if (Number(lapData[i][1]) == data.BestLapTime) {
-                // this is the best time, so show no split time
-                lapData[i][2] = ''
-            } else if (
-                Math.abs(Number(lapData[i][1]) - data.BestLapTime).toFixed(3) ==
-                '0.000'
-            ) {
-                lapData[i][2] = ''
-            } else {
-                lapData[i][2] = (
-                    Number(lapData[i][1]) - data.BestLapTime
-                ).toFixed(3)
+                const messageData: string = JSON.stringify({
+                    DeviceID: 'Racer',
+                    SensorReadings: {
+                        Lap: data.Lap,
+                        LastLapTime: data.LastLapTime,
+                        BestLapTime: data.BestLapTime,
+                        RaceCode: raceCode ? raceCode : '',
+                    }
+                })
+                sendToLapper(connectionString, messageData)
             }
-        }
-
-        // update fuel numbers
-        setFuelPerLap((100 * ((1 - data.Fuel) / lapNumber)).toFixed(2) + '%')
-    }
+            
+        })
+    }, [])
 
     return (
         <ThemeProvider theme={darkTheme}>
@@ -401,6 +434,10 @@ export const Dashboard = () => {
                                         <Button
                                             variant="outline-danger"
                                             onClick={() => {
+                                                ipcRenderer.send(
+                                                    'finish-race',
+                                                    ''
+                                                )
                                                 setLapCoords([])
                                                 setPrevLapCoords([])
                                                 setLapNumber(-1)
@@ -409,10 +446,10 @@ export const Dashboard = () => {
                                                 setMpg('0')
                                                 setPreviousCoords([0, 0, 0])
                                                 setPreviousFuel(1)
-                                                lapCoords.length = 0
+                                                lapCoords.length = 0                                                
                                             }}
                                         >
-                                            Reset
+                                            Finish Race
                                         </Button>
                                     </div>
                                 </td>

@@ -131,6 +131,19 @@ namespace ForzaCore
                 }
                 return "";
             });
+
+            connection.On("finish-race", (string msg) =>
+            {
+                // if (recordingData)
+                // {
+                //     StopRecordingSession();
+                // }
+                // else
+                // {
+                //     StartNewRecordingSession();
+                // }
+                return "return from c";
+            });
             connection.Listen();
             #endregion
         }

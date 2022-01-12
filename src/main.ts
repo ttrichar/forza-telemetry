@@ -95,4 +95,14 @@ connection.on('switch-recording-mode', (data: any) => {
 // send
 ipcMain.on('switch-recording-mode', (event, arg) => {
     connection.send('switch-recording-mode', '', (response: any) => {})
+    console.log(`Blah`)
+})
+
+ipcMain.on('finish-race', (event, arg) => {
+    console.log(`Finish Race`)
+    connection.send('finish-race', '', (error: any, data: string) => {
+        console.log(`${JSON.stringify(data)}`)
+        // const dataObj = JSON.parse(data)
+        // window.webContents.send('finish-race', dataObj)
+    })
 })

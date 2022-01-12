@@ -202,7 +202,7 @@ function secondsToTimeString(seconds: number) {
     return strFormat
 }
 
-function sendToLapper(connectionString: string, messageData: string){
+function sendToLapper(connectionString: string, messageData: string) {
     const client: Client = Client.fromConnectionString(
         connectionString,
         Protocol
@@ -324,8 +324,9 @@ export const Dashboard = () => {
                         // this is the best time, so show no split time
                         lapData[i][2] = ''
                     } else if (
-                        Math.abs(Number(lapData[i][1]) - data.BestLapTime).toFixed(3) ==
-                        '0.000'
+                        Math.abs(
+                            Number(lapData[i][1]) - data.BestLapTime
+                        ).toFixed(3) == '0.000'
                     ) {
                         lapData[i][2] = ''
                     } else {
@@ -336,8 +337,10 @@ export const Dashboard = () => {
                 }
 
                 // update fuel numbers
-                setFuelPerLap((100 * ((1 - data.Fuel) / lapNumber)).toFixed(2) + '%')
-            }            
+                setFuelPerLap(
+                    (100 * ((1 - data.Fuel) / lapNumber)).toFixed(2) + '%'
+                )
+            }
         })
     }, [])
 
@@ -369,11 +372,10 @@ export const Dashboard = () => {
                         LastLapTime: data.LastLapTime,
                         BestLapTime: data.BestLapTime,
                         RaceCode: raceCode ? raceCode : '',
-                    }
+                    },
                 })
                 sendToLapper(connectionString, messageData)
             }
-            
         })
     }, [])
 
@@ -446,7 +448,7 @@ export const Dashboard = () => {
                                                 setMpg('0')
                                                 setPreviousCoords([0, 0, 0])
                                                 setPreviousFuel(1)
-                                                lapCoords.length = 0                                                
+                                                lapCoords.length = 0
                                             }}
                                         >
                                             Finish Race

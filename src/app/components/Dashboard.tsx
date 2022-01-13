@@ -203,7 +203,6 @@ function secondsToTimeString(seconds: number) {
 }
 
 function sendToLapper(connectionString: string, messageData: string) {
-    console.log('Sending to Lapper')
     const client: Client = Client.fromConnectionString(
         connectionString,
         Protocol
@@ -212,8 +211,8 @@ function sendToLapper(connectionString: string, messageData: string) {
     const message: Message = new Message(messageData)
 
     client.sendEvent(message)
-    console.log('Sent to Lapper')
 }
+
 export const Dashboard = () => {
     const [data, setData] = useState<Packet>()
     const [recordingState, setRecordingState] = useState('Record')
@@ -323,8 +322,6 @@ export const Dashboard = () => {
             ])
         }
 
-        console.log(raceCode)
-
         if (connectionString != '') {
             const messageData: string = JSON.stringify({
                 DeviceID: 'Racer',
@@ -362,16 +359,6 @@ export const Dashboard = () => {
 
     if (finishRace) {
         if (connectionString != '') {
-            // const messageData: string = JSON.stringify({
-            //     DeviceID: 'Racer',
-            //     SensorReadings: {
-            //         Lap: lapNumber + 1,
-            //         LastLapTime: data.LastLapTime,
-            //         BestLapTime: data.BestLapTime,
-            //         RaceCode: raceCode ? raceCode : '',
-            //     }
-            // })
-
             const messageData: string = JSON.stringify({
                 DeviceID: 'Racer',
                 Type: 'FinishRace',

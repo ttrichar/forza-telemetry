@@ -19,7 +19,6 @@ namespace ForzaCore
         private const int recordRateMS = 50;
         private static bool recordingData = false;
         private static bool isRaceOn = false;
-        // private static DeviceClient s_deviceClient;
         private static uint lastLapCheck = 0;
         private static float timeOffset = 0;
         private static float lastLapTime = 0;
@@ -52,36 +51,14 @@ namespace ForzaCore
                             return;
                         }
                         isRaceOn = resultBuffer.IsRaceOn();
-                        
-                        //data = ParseData(resultBuffer);
 
-                        // if(lastLapCheck > 0 && resultBuffer.Lap().CompareTo(0) == 0){
-                        //     //  var messageData = new {
-                        //     //     DeviceID = "Trevor",
-                        //     //     SensorReadings = new{
-                        //     //         Lap = lastLapCheck + 1,
-                        //     //         LastLapTime = lastLapTime
-                        //     //         }
-                        //     //     };      
-                        //     //     var messageDataString = JsonConvert.SerializeObject(messageData);                               
-                        //         data = ParseData(resultBuffer, lastLapTime + timeOffset, bestLapTime);
-                        //         SendData(data);
-                        //         lastLapCheck = 0;
+                        timeOffset = resultBuffer.CurrentLapTime() - lastLapTime;
 
-                        //         lastLapTime = 0;
+                        lastLapCheck = resultBuffer.Lap();
 
-                        //         bestLapTime = 0;
+                        lastLapTime = resultBuffer.LastLapTime();
 
-                        //         timeOffset = 0;
-                        //     };
-
-                            timeOffset = resultBuffer.CurrentLapTime() - lastLapTime;
-
-                            lastLapCheck = resultBuffer.Lap();
-
-                            lastLapTime = resultBuffer.LastLapTime();
-
-                            bestLapTime = resultBuffer.BestLapTime();
+                        bestLapTime = resultBuffer.BestLapTime();
 
                         // send data to node here
                         if (resultBuffer.IsRaceOn())
@@ -107,18 +84,6 @@ namespace ForzaCore
             #endregion
 
             #region messaging between dotnet and node
-            connection.On<string, string>("connection-string-from-node", msg =>
-            {
-                connectionString = msg;
-                return "connection string set";
-            });
-
-            connection.On<string, string>("race-code-from-node", msg =>
-            {
-                raceCode = msg;
-                return "race code set";
-            });
-
             connection.On<string, string>("switch-recording-mode", msg =>
             {
                 if (recordingData)
@@ -132,6 +97,7 @@ namespace ForzaCore
                 return "";
             });
 
+            //Send last saved telemetry message once the "Finish Race" button is clicked
             connection.On("finish-race", (string msg) =>
             {
                 data = ParseData(globalResultBuffer, lastLapTime + timeOffset, bestLapTime);

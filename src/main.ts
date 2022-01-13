@@ -64,9 +64,8 @@ connection.on('new-data', (data: any) => {
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
     // log this event
-    // console.log(`FROM THE NORMAL CALL: ${JSON.stringify(dataObj)}`)
     console.log(
-        `FROM THE NORMAL CALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
+        `FROM THE new-data Connection: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
     )
 })
 
@@ -77,7 +76,7 @@ connection.on('finish-race', (data: any) => {
     window.webContents.send('finish-race-please', dataObj)
     // log this event
     console.log(
-        `FROM THE finish-raceCALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
+        `FROM THE finish-race Connection: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
     )
 })
 
@@ -88,8 +87,6 @@ connection.on('switch-recording-mode', (data: any) => {
     const dataObj = JSON.parse(data)
     // send the data from forza to the front-end
     window.webContents.send('new-data-for-dashboard', dataObj)
-    // log this event
-    // console.log(`${dataObj.Steer}`)
 })
 
 // send
@@ -99,10 +96,5 @@ ipcMain.on('switch-recording-mode', (event, arg) => {
 
 ipcMain.on('finish-race', (event, arg) => {
     console.log(`Finish Race`)
-    connection.send('finish-race', '', (error: any, data: any) => {
-        // console.log(`${JSON.stringify(data)}`)
-        // const dataObj = JSON.parse(data)
-        // event.reply('finish-race-please', dataObj)
-        // console.log(`Blah`)
-    })
+    connection.send('finish-race', '', (error: any, data: any) => {})
 })

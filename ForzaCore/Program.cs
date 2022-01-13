@@ -23,6 +23,7 @@ namespace ForzaCore
         private static uint lastLapCheck = 0;
         private static float timeOffset = 0;
         private static float lastLapTime = 0;
+        private static byte[] globalResultBuffer;
         private static string connectionString = "";
         private static string raceCode = "";
         private static DataPacket data = new DataPacket();
@@ -54,25 +55,25 @@ namespace ForzaCore
                         
                         //data = ParseData(resultBuffer);
 
-                        if(lastLapCheck > 0 && resultBuffer.Lap().CompareTo(0) == 0){
-                            //  var messageData = new {
-                            //     DeviceID = "Trevor",
-                            //     SensorReadings = new{
-                            //         Lap = lastLapCheck + 1,
-                            //         LastLapTime = lastLapTime
-                            //         }
-                            //     };      
-                            //     var messageDataString = JsonConvert.SerializeObject(messageData);                               
-                                data = ParseData(resultBuffer, lastLapTime + timeOffset, bestLapTime);
-                                SendData(data, true);
-                                lastLapCheck = 0;
+                        // if(lastLapCheck > 0 && resultBuffer.Lap().CompareTo(0) == 0){
+                        //     //  var messageData = new {
+                        //     //     DeviceID = "Trevor",
+                        //     //     SensorReadings = new{
+                        //     //         Lap = lastLapCheck + 1,
+                        //     //         LastLapTime = lastLapTime
+                        //     //         }
+                        //     //     };      
+                        //     //     var messageDataString = JsonConvert.SerializeObject(messageData);                               
+                        //         data = ParseData(resultBuffer, lastLapTime + timeOffset, bestLapTime);
+                        //         SendData(data);
+                        //         lastLapCheck = 0;
 
-                                lastLapTime = 0;
+                        //         lastLapTime = 0;
 
-                                bestLapTime = 0;
+                        //         bestLapTime = 0;
 
-                                timeOffset = 0;
-                            };
+                        //         timeOffset = 0;
+                        //     };
 
                             timeOffset = resultBuffer.CurrentLapTime() - lastLapTime;
 
@@ -87,7 +88,8 @@ namespace ForzaCore
                         // send data to node here
                         if (resultBuffer.IsRaceOn())
                         {
-                            data = ParseData(resultBuffer);
+                            globalResultBuffer = resultBuffer;
+                            data = ParseData(globalResultBuffer);
                             SendData(data);
                         }
                     });
@@ -134,29 +136,23 @@ namespace ForzaCore
 
             connection.On("finish-race", (string msg) =>
             {
-                // if (recordingData)
-                // {
-                //     StopRecordingSession();
-                // }
-                // else
-                // {
-                //     StartNewRecordingSession();
-                // }
-                return "return from c";
+                data = ParseData(globalResultBuffer, lastLapTime + timeOffset, bestLapTime);
+                
+                string dataString = System.Text.Json.JsonSerializer.Serialize(data);
+                
+                connection.Send("finish-race", dataString);    
+
+                return dataString;
             });
             connection.Listen();
             #endregion
         }
 
-        static void SendData(DataPacket data, bool isLastLap = false)
+        static void SendData(DataPacket data)
         {
             string dataString = System.Text.Json.JsonSerializer.Serialize(data);
-            if(!isLastLap){
-                connection.Send("new-data", dataString);
-            }
-            else{
-                connection.Send("last-lap-data", dataString);
-            }
+            
+            connection.Send("new-data", dataString);           
         }
 
         static void RecordData(DataPacket data)

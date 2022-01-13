@@ -70,14 +70,14 @@ connection.on('new-data', (data: any) => {
     )
 })
 
-connection.on('last-lap-data', (data: any) => {
+connection.on('finish-race', (data: any) => {
     // parse data into object
     const dataObj = JSON.parse(data)
     // send the data from forza to the front-end
-    window.webContents.send('new-data-for-dashboard', dataObj)
+    window.webContents.send('finish-race-please', dataObj)
     // log this event
     console.log(
-        `FROM THE LAST LAP CALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
+        `FROM THE finish-raceCALL: IsRaceOn ${dataObj.IsRaceOn} Lap ${dataObj.Lap} CurrentLapTime ${dataObj.CurrentLapTime} BestLapTime ${dataObj.BestLapTime} LastLapTime ${dataObj.LastLapTime}`
     )
 })
 
@@ -95,14 +95,14 @@ connection.on('switch-recording-mode', (data: any) => {
 // send
 ipcMain.on('switch-recording-mode', (event, arg) => {
     connection.send('switch-recording-mode', '', (response: any) => {})
-    console.log(`Blah`)
 })
 
 ipcMain.on('finish-race', (event, arg) => {
     console.log(`Finish Race`)
-    connection.send('finish-race', '', (error: any, data: string) => {
-        console.log(`${JSON.stringify(data)}`)
+    connection.send('finish-race', '', (error: any, data: any) => {
+        // console.log(`${JSON.stringify(data)}`)
         // const dataObj = JSON.parse(data)
-        // window.webContents.send('finish-race', dataObj)
+        // event.reply('finish-race-please', dataObj)
+        // console.log(`Blah`)
     })
 })

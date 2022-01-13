@@ -328,6 +328,7 @@ export const Dashboard = () => {
         if (connectionString != '') {
             const messageData: string = JSON.stringify({
                 DeviceID: 'Racer',
+                Type: 'NextLap',
                 SensorReadings: {
                     Lap: lapNumber + 1,
                     LastLapTime: data.LastLapTime,
@@ -373,9 +374,10 @@ export const Dashboard = () => {
 
             const messageData: string = JSON.stringify({
                 DeviceID: 'Racer',
+                Type: 'FinishRace',
                 SensorReadings: {
                     Lap: data.Lap + 1,
-                    LastLapTime: data.LastLapTime,
+                    LastLapTime: data.CurrentLapTime,
                     BestLapTime: data.BestLapTime,
                     RaceCode: raceCode ? raceCode : '',
                 },
@@ -383,6 +385,7 @@ export const Dashboard = () => {
             sendToLapper(connectionString, messageData)
         }
         setfinishRace(false)
+        setLapNumber(-1)
     }
 
     return (

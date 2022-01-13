@@ -79,11 +79,9 @@ namespace ForzaCore
 
                             lastLapCheck = resultBuffer.Lap();
 
-                            lastLapTime = resultBuffer.CurrentLapTime();
+                            lastLapTime = resultBuffer.LastLapTime();
 
                             bestLapTime = resultBuffer.BestLapTime();
-                            
-                        
 
                         // send data to node here
                         if (resultBuffer.IsRaceOn())
